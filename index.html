@@ -7,24 +7,24 @@
 <style>
   :root {
     --bg: #faf9f7;
+    --box: #f7f2e7;
     --text: #121212;
     --muted: #666;
     --rule: #e2e0dc;
-    --serif: "Georgia", "Times New Roman", serif;
+    --serif: Georgia, "Times New Roman", serif;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-
   body {
-    background: #0a0a0a; /* fundo escuro fica atrás dos vídeos */
+    background: #0a0a0a;
     color: var(--text);
     font-family: var(--sans);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ===== BARRA DE PROGRESSO ===== */
+  /* Barra de progresso */
   .progress {
     position: fixed; top: 0; left: 0;
     height: 3px; width: 0%;
@@ -33,53 +33,119 @@
     transition: width 0.08s linear;
   }
 
-  /* ===== PALCO DE VÍDEO FIXO ===== */
+  /* Palco de vídeo fixo */
   .video-stage {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: #0a0a0a;
-    pointer-events: none;
+    position: fixed; inset: 0; z-index: 0;
+    background: #0a0a0a; pointer-events: none;
   }
   .video-slot {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     opacity: 0;
-    /* Sem transition — a opacidade é controlada via JS por frame */
   }
   .video-slot video {
     width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
+    object-fit: cover; display: block;
   }
   .video-slot .vignette {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.4) 0%,
-      transparent 20%,
-      transparent 65%,
-      rgba(0,0,0,0.55) 100%
-    );
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0.35) 0%, transparent 20%,
+      transparent 65%, rgba(0,0,0,0.5) 100%);
   }
-  .video-slot .caption {
-    position: absolute;
-    bottom: 12vh;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    width: calc(100% - 3rem);
-    max-width: 640px;
-    color: #fff;
-    font-family: var(--serif);
-    font-size: clamp(1.15rem, 2.4vw, 1.55rem);
-    line-height: 1.35;
+
+  /* HERO */
+  .hero {
+    position: relative; z-index: 1;
+    background: var(--bg);
+    padding: 8rem 1.5rem 5rem;
     text-align: center;
-    text-shadow: 0 2px 24px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,0.9);
-    opacity: 0;
+  }
+  .hero-inner { max-width: 720px; margin: 0 auto; }
+  .hero .kicker {
+    font-size: 0.78rem; letter-spacing: 3px;
+    text-transform: uppercase; color: #b8860b;
+    font-weight: 700; margin-bottom: 1.4rem;
+    animation: fadeUp 1s 0.2s both;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3.4rem);
+    line-height: 1.08; font-weight: 700;
+    letter-spacing: -0.5px; margin-bottom: 1.4rem;
+    animation: fadeUp 1s 0.5s both;
+  }
+  .hero .dek {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+    color: #444; font-style: italic;
+    max-width: 580px; margin: 0 auto 2rem;
+    animation: fadeUp 1s 0.8s both;
+  }
+  .hero .byline {
+    font-size: 0.85rem; color: var(--muted);
+    animation: fadeUp 1s 1s both;
+  }
+  .hero .byline strong { color: #222; font-weight: 600; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CENA scrollável */
+  .scene {
+    position: relative;
+    height: 240vh;  /* espaço para o texto respirar */
     pointer-events: none;
   }
-  .video-slot .caption .label {
+  .scene.tall { height: 320vh; }
+  .scene.short { height: 200vh; }
+
+  /* Caixa de texto (overlay) */
+  .textbox-wrap {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+  }
+  .textbox-wrap.left {
+    justify-content: flex-start;
+    padding-left: max(2rem, 6vw);
+    padding-right: 2rem;
+  }
+  .textbox-wrap.right {
+    justify-content: flex-end;
+    padding-right: max(2rem, 6vw);
+    padding-left: 2rem;
+  }
+  .textbox-wrap.center {
+    justify-content: center;
+    padding: 0 2rem;
+  }
+  .textbox {
+    background: var(--box);
+    padding: 1.6rem 2rem;
+    max-width: 400px;
+    box-shadow: 0 12px 40px -20px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+    pointer-events: auto;
+  }
+  .textbox.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .textbox p {
+    font-family: var(--serif);
+    font-size: clamp(1.05rem, 1.4vw, 1.18rem);
+    line-height: 1.45;
+    color: #1a1a1a;
+    margin-bottom: 0.7rem;
+  }
+  .textbox p:last-child { margin-bottom: 0; }
+  .textbox .label {
     padding: 0 4px;
     border-radius: 2px;
     font-style: normal;
@@ -87,126 +153,46 @@
     color: #000;
   }
 
-  /* ===== HERO ===== */
-  .hero {
-    position: relative;
-    z-index: 1;
-    background: var(--bg);
-    max-width: 100%;
-    padding: 8rem 1.5rem 5rem;
-    text-align: center;
-  }
-  .hero-inner {
-    max-width: 720px;
-    margin: 0 auto;
-  }
-  .hero .kicker {
-    font-size: 0.78rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #b8860b;
-    font-weight: 700;
-    margin-bottom: 1.4rem;
-    animation: fadeUp 1s 0.2s both;
-  }
-  .hero h1 {
-    font-family: var(--serif);
-    font-size: clamp(2rem, 5vw, 3.4rem);
-    line-height: 1.08;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 1.4rem;
-    animation: fadeUp 1s 0.5s both;
-  }
-  .hero .dek {
-    font-family: var(--serif);
-    font-size: clamp(1.1rem, 2.2vw, 1.35rem);
-    color: #444;
-    font-style: italic;
-    max-width: 580px;
-    margin: 0 auto 2rem;
-    animation: fadeUp 1s 0.8s both;
-  }
-  .hero .byline {
-    font-size: 0.85rem;
-    color: var(--muted);
-    letter-spacing: 0.5px;
-    animation: fadeUp 1s 1s both;
-  }
-  .hero .byline strong { color: #222; font-weight: 600; }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ===== CENAS (espaçadores transparentes) ===== */
-  .scene {
-    position: relative;
-    height: 260vh;
-    pointer-events: none;
-  }
-  .scene.tall { height: 320vh; }
-  .scene.short { height: 200vh; }
-
-  /* ===== INTERLÚDIOS DE TEXTO ===== */
+  /* Interlúdio de texto centralizado */
   .interlude {
-    position: relative;
-    z-index: 1;
+    position: relative; z-index: 1;
     background: var(--bg);
     padding: 7rem 1.5rem;
-    max-width: 100%;
   }
   .interlude-inner {
-    max-width: 720px;
-    margin: 0 auto;
+    max-width: 720px; margin: 0 auto;
     text-align: center;
   }
   .interlude p {
     font-family: var(--serif);
     font-size: clamp(1.4rem, 3vw, 2rem);
-    line-height: 1.35;
-    color: #222;
-    opacity: 0;
-    transform: translateY(30px);
+    line-height: 1.35; color: #222;
+    opacity: 0; transform: translateY(30px);
     transition: opacity 1s ease, transform 1s cubic-bezier(0.22,1,0.36,1);
   }
-  .interlude p.in {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .interlude p.in { opacity: 1; transform: translateY(0); }
 
-  /* ===== CRÉDITOS ===== */
+  /* Créditos */
   .credits {
-    position: relative;
-    z-index: 1;
+    position: relative; z-index: 1;
     background: var(--bg);
-    max-width: 100%;
     padding: 4rem 1.5rem;
   }
   .credits-inner {
-    max-width: 620px;
-    margin: 0 auto;
+    max-width: 620px; margin: 0 auto;
     border-top: 1px solid var(--rule);
     padding-top: 2.5rem;
-    font-size: 0.9rem;
-    color: #555;
-    line-height: 1.7;
+    font-size: 0.9rem; color: #555; line-height: 1.7;
   }
   .credits strong { color: #111; }
 
-  /* ===== INDICADOR DE SCROLL ===== */
+  /* Indicador de scroll */
   .scroll-hint {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
+    position: fixed; bottom: 2rem; left: 50%;
     transform: translateX(-50%);
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #888;
-    z-index: 50;
-    pointer-events: none;
+    font-size: 0.75rem; letter-spacing: 2px;
+    text-transform: uppercase; color: #888;
+    z-index: 50; pointer-events: none;
     transition: opacity 0.5s ease;
     animation: bounce 2s infinite;
   }
@@ -216,23 +202,18 @@
     50% { transform: translateX(-50%) translateY(6px); }
   }
 
-  /* ===== LOADING ===== */
+  /* Loading */
   .loading {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: #0a0a0a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     z-index: 9999;
     transition: opacity 0.6s ease;
   }
   .loading.hide { opacity: 0; pointer-events: none; }
   .loading .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #b8860b;
-    margin: 0 4px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #b8860b; margin: 0 4px;
     animation: pulse 1.2s infinite ease-in-out;
   }
   .loading .dot:nth-child(2) { animation-delay: 0.15s; }
@@ -244,8 +225,13 @@
 
   @media (max-width: 640px) {
     .hero { padding: 5rem 1.2rem 3rem; }
-    .scene { height: 220vh; }
-    .video-slot .caption { bottom: 14vh; font-size: 1.05rem; }
+    .scene { height: 200vh; }
+    .textbox-wrap.left, .textbox-wrap.right {
+      justify-content: center;
+      padding: 0 1.2rem;
+    }
+    .textbox { max-width: 100%; padding: 1.2rem 1.4rem; }
+    .textbox p { font-size: 1rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -256,106 +242,72 @@
     .scroll-hint { display: none; }
   }
 </style>
-</head>
-<body>
-
-<div class="progress" id="progress"></div>
-
-<div class="loading" id="loading">
-  <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-</div>
-
-<!-- Palco fixo com todos os vídeos -->
-<div class="video-stage" id="videoStage"></div>
-
-<!-- Hero -->
-<header class="hero">
-  <div class="hero-inner">
-    <div class="kicker">The New York Times Magazine · Medicina</div>
-    <h1>Os Caminhos Ocultos do Corpo Humano</h1>
-    <p class="dek">A detecção de outro sistema circulatório no corpo humano pode ter implicações científicas enormes — e talvez explique a acupuntura.</p>
-    <p class="byline">Por <strong>Avraham Z. Cooper</strong> · Ilustrações de <strong>Jérôme Berthier</strong> · 11 de maio de 2026</p>
-  </div>
-</header>
-
-<!-- Conteúdo scrollável -->
-<main id="scrolly"></main>
-
-<!-- Créditos -->
-<footer class="credits">
-  <div class="credits-inner">
-    <p><strong>Avraham Z. Cooper</strong> é médico pneumologista e professor associado de medicina na Ohio State University.</p>
-    <p style="margin-top:1rem"><strong>Jérôme Berthier</strong> é artista visual e ilustrador em Vancouver, Canadá.</p>
-    <p style="margin-top:1.5rem;font-size:0.8rem;color:#888">
-      Recriação não-oficial em português, sem anúncios e sem login. Conteúdo e vídeos originais © The New York Times Company. Tradução livre para fins de leitura.
-    </p>
-  </div>
-</footer>
-
-<div class="scroll-hint" id="hint">Role para começar</div>
 
 <script>
 /* ========= DADOS ========= */
+/* Adicionei 'loop' e 'side' em cada cena. Os vídeos com loop:true tocam
+   continuamente enquanto a cena está visível; os demais tocam 1x e seguram
+   no último frame. 'side' define o lado da caixa de texto. */
 const CENAS = [
-  { tipo:"scene", video:"videos/01.mp4", poster:"https://static01.nyt.com/images/2026/02/09/09visualUploader-89690-cover/09visualUploader-89690-cover-superJumbo.jpg", height:"short", captions:["Algumas descobertas mudam a forma como vemos o corpo humano."] },
-  { tipo:"scene", video:"videos/02.mp4", poster:"https://static01.nyt.com/images/2026/05/07/07visualUploader-26197-cover/07visualUploader-26197-cover-superJumbo.jpg", captions:["Em 2021, pesquisadores descreveram o que viram ao examinar amostras de biópsia de pele com tatuagens: as partículas de tinta viajaram mais fundo do que o esperado, através de espaços intersticiais, até o tecido sob a pele — a fáscia."] },
-  { tipo:"scene", video:"videos/03.mp4", poster:"https://static01.nyt.com/images/2026/05/07/07visualUploader-80199-cover/07visualUploader-80199-cover-superJumbo.jpg", height:"short", captions:["“Isso não deveria ter acontecido”, disse Neil Theise, professor de patologia na Universidade de Nova York e um dos autores do artigo."] },
-  { tipo:"scene", video:"videos/04.mp4", poster:"https://static01.nyt.com/images/2026/05/08/08visualUploader-47660-cover/08visualUploader-47660-cover-superJumbo.jpg", height:"tall", captions:[
+  { tipo:"scene", video:"videos/01.mp4", loop:true,  side:"center", height:"short", captions:["Algumas descobertas mudam a forma como vemos o corpo humano."] },
+  { tipo:"scene", video:"videos/02.mp4", loop:false, side:"right",  captions:["Em 2021, pesquisadores descreveram o que viram ao examinar amostras de biópsia de pele com tatuagens: as partículas de tinta viajaram mais fundo do que o esperado, através de espaços intersticiais, até o tecido sob a pele — a fáscia."] },
+  { tipo:"scene", video:"videos/03.mp4", loop:false, side:"left",   height:"short", captions:["“Isso não deveria ter acontecido”, disse Neil Theise, professor de patologia na Universidade de Nova York e um dos autores do artigo."] },
+  { tipo:"scene", video:"videos/04.mp4", loop:false, side:"right",  height:"tall", captions:[
     "A existência de um aparente conduíte entre a pele e a fáscia abaixo dela — duas camadas de tecido que não se sabia conectarem-se dessa forma — quebrou os limites anatômicos aceitos.",
     "Os pesquisadores também descobriram que o mesmo valia para outras conexões microscópicas até então desconhecidas entre órgãos no abdômen.",
     "Espaços intersticiais existem na pele, sob ela, e entre e ao redor dos órgãos — observados há mais de um século, mas supostos isolados, como uma colcha de retalhos.",
     "Em 2021, ficou claro que eram partes de um vasto todo interconectado — o que os cientistas agora chamam de interstício."
   ]},
-  { tipo:"scene", video:"videos/05.mp4", poster:"https://static01.nyt.com/images/2026/05/08/08visualUploader-57195-cover/08visualUploader-57195-cover-superJumbo.jpg", captions:[
+  { tipo:"scene", video:"videos/05.mp4", loop:false, side:"left", captions:[
     "“Este é claramente um terceiro sistema corporal para a circulação de fluidos”, diz Rebecca Wells, professora de medicina na Universidade da Pensilvânia e coautora do estudo.",
     "O corpo humano de repente parecia menos uma colcha de retalhos e mais um cobertor de tricô.",
     "As implicações de um novo sistema circulatório — para a nossa saúde e para a compreensão do próprio corpo — são potencialmente enormes."
   ]},
   { tipo:"stickytext", text:"Por 400 anos, os anatomistas entenderam que havia dois sistemas no corpo funcionando como redes de transporte de células, eletrólitos, nutrientes e hormônios: o sistema linfático e o sistema cardiovascular." },
-  { tipo:"scene", video:"videos/06.mp4", poster:"https://static01.nyt.com/images/2026/02/09/09visualUploader-86476-cover/09visualUploader-86476-cover-superJumbo.jpg", height:"short", captions:["O <span class='label' style='background:#22FFC2'>sistema linfático</span>, que remove o excesso de fluido dos tecidos, foi observado já em 1622 pelo médico italiano Gaspare Aselli ao dissecar um cão."] },
-  { tipo:"scene", video:"videos/07.mp4", poster:"https://static01.nyt.com/images/2026/02/11/11visualUploader-47359-cover/11visualUploader-47359-cover-superJumbo.jpg", height:"short", captions:["O funcionamento do <span class='label' style='background:#FF371D'>sistema cardiovascular</span>, em que o coração bombeia sangue por artérias, capilares e veias, foi descrito pela primeira vez em 1628 pelo médico e anatomista inglês William Harvey."] },
-  { tipo:"scene", video:"videos/08.mp4", poster:"https://static01.nyt.com/images/2026/05/06/06visualUploader-70196-cover/06visualUploader-70196-cover-superJumbo.jpg", captions:["Também sabemos, desde a descrição há mais de um século pelo anatomista americano Franklin Mall, que um tecido conjuntivo fibroso envolve e sustenta as estruturas internas: órgãos, nervos, vasos sanguíneos, ossos, músculos."] },
-  { tipo:"scene", video:"videos/09.mp4", poster:"https://static01.nyt.com/images/2026/05/04/04visualUploader-64229-cover/04visualUploader-64229-cover-superJumbo.jpg", height:"short", captions:["Para ter uma ideia do interior do interstício, Wells sugere imaginar uma tela de galinheiro embutida em um gel."] },
-  { tipo:"scene", video:"videos/10.mp4", poster:"https://static01.nyt.com/images/2026/04/29/29visualUploader-47888-cover/29visualUploader-47888-cover-superJumbo.jpg", height:"short", captions:["A tela representa o <span class='label' style='background:#FF8382'>colágeno</span>, um tipo de proteína. Dentro do interstício, feixes de colágeno se entrelaçam, fornecendo força e estrutura."] },
-  { tipo:"scene", video:"videos/11.mp4", poster:"https://static01.nyt.com/images/2026/05/06/06visualUploader-94352-cover/06visualUploader-94352-cover-superJumbo.jpg", height:"short", captions:["O <span class='label' style='background:#4EDBFF'>gel</span> esponjoso, capaz de absorver e armazenar água, é feito de ácido hialurônico e preenche os espaços entre os feixes de colágeno."] },
-  { tipo:"scene", video:"videos/12.mp4", poster:"https://static01.nyt.com/images/2026/05/06/06visualUploader-85675-cover/06visualUploader-85675-cover-superJumbo.jpg", height:"short", captions:["<span class='label' style='background:#51ADFF'>Fluido, células e outras moléculas</span> fluem lentamente por esse gel."] },
-  { tipo:"scene", video:"videos/13.mp4", poster:"https://static01.nyt.com/images/2026/05/01/01visualUploader-4608-cover/01visualUploader-4608-cover-superJumbo.jpg", captions:["Nessa nova visão, essas áreas microscópicas se conectam em uma teia maior, pela qual o <span class='label' style='background:#51ADFF'>fluido</span> se move antes de reentrar nos sistemas <span class='label' style='background:#22FFC2'>linfático</span> e <span class='label' style='background:#FF371D'>cardiovascular</span>,"] },
-  { tipo:"scene", video:"videos/14.mp4", poster:"https://static01.nyt.com/images/2026/02/12/11visualUploader-12687-cover/11visualUploader-12687-cover-superJumbo.jpg", height:"short", captions:["como água subterrânea fluindo pela crosta terrestre antes de retornar à superfície em fontes e rios."] },
+  { tipo:"scene", video:"videos/06.mp4", loop:false, side:"left",   height:"short", captions:["O <span class='label' style='background:#22FFC2'>sistema linfático</span>, que remove o excesso de fluido dos tecidos, foi observado já em 1622 pelo médico italiano Gaspare Aselli ao dissecar um cão."] },
+  { tipo:"scene", video:"videos/07.mp4", loop:false, side:"right",  height:"short", captions:["O funcionamento do <span class='label' style='background:#FF371D'>sistema cardiovascular</span>, em que o coração bombeia sangue por artérias, capilares e veias, foi descrito pela primeira vez em 1628 pelo médico e anatomista inglês William Harvey."] },
+  { tipo:"scene", video:"videos/08.mp4", loop:false, side:"left",   captions:["Também sabemos, desde a descrição há mais de um século pelo anatomista americano Franklin Mall, que um tecido conjuntivo fibroso envolve e sustenta as estruturas internas: órgãos, nervos, vasos sanguíneos, ossos, músculos."] },
+  { tipo:"scene", video:"videos/09.mp4", loop:false, side:"right",  height:"short", captions:["Para ter uma ideia do interior do interstício, Wells sugere imaginar uma tela de galinheiro embutida em um gel."] },
+  { tipo:"scene", video:"videos/10.mp4", loop:false, side:"left",   height:"short", captions:["A tela representa o <span class='label' style='background:#FF8382'>colágeno</span>, um tipo de proteína. Dentro do interstício, feixes de colágeno se entrelaçam, fornecendo força e estrutura."] },
+  { tipo:"scene", video:"videos/11.mp4", loop:false, side:"right",  height:"short", captions:["O <span class='label' style='background:#4EDBFF'>gel</span> esponjoso, capaz de absorver e armazenar água, é feito de ácido hialurônico e preenche os espaços entre os feixes de colágeno."] },
+  { tipo:"scene", video:"videos/12.mp4", loop:false, side:"left",   height:"short", captions:["<span class='label' style='background:#51ADFF'>Fluido, células e outras moléculas</span> fluem lentamente por esse gel."] },
+  { tipo:"scene", video:"videos/13.mp4", loop:false, side:"right",  captions:["Nessa nova visão, essas áreas microscópicas se conectam em uma teia maior, pela qual o <span class='label' style='background:#51ADFF'>fluido</span> se move antes de reentrar nos sistemas <span class='label' style='background:#22FFC2'>linfático</span> e <span class='label' style='background:#FF371D'>cardiovascular</span>,"] },
+  { tipo:"scene", video:"videos/14.mp4", loop:false, side:"left",   height:"short", captions:["como água subterrânea fluindo pela crosta terrestre antes de retornar à superfície em fontes e rios."] },
   { tipo:"stickytext", text:"Theise, Wells e colegas foram elogiados por seus pares. “Esse conhecimento é na verdade bastante antigo”, diz Leah Welsh, médica osteopata em Ohio State. “É algo que outros sistemas de medicina oferecem há muito tempo, mas eles não tinham microscópios.”" },
   { tipo:"stickytext", text:"Como Theise contou ao “Radiolab” em 2023, um especialista em medicina tradicional chinesa o abordou num congresso na China: “Falamos sobre isso há 4.000 anos.”" },
-  { tipo:"scene", video:"videos/15.mp4", poster:"https://static01.nyt.com/images/2026/02/11/11visualUploader-23471-cover/11visualUploader-23471-cover-superJumbo.jpg", captions:["A <span class='label' style='background:#FFC546'>acupuntura</span> é usada para tratar condições tão variadas quanto dor crônica, enxaqueca, alergias sazonais e náusea causada por quimioterapia — mas algumas de suas ações nunca foram completamente explicadas. A descoberta do interstício pode ajudar a entender, em termos biomédicos modernos, como ela funciona."] },
-  { tipo:"scene", video:"videos/16.mp4", poster:"https://static01.nyt.com/images/2026/02/18/18visualUploader-16144-cover/18visualUploader-16144-cover-superJumbo.jpg", height:"short", loop:true, captions:["Os princípios da prática invocam dois elementos circulantes: chi e sangue."] },
-  { tipo:"scene", video:"videos/17.mp4", poster:"https://static01.nyt.com/images/2026/05/01/01visualUploader-34423-cover/01visualUploader-34423-cover-superJumbo.jpg", captions:["A medicina tradicional chinesa descreve o chi como fluindo ao longo de uma das 12 trilhas principais, chamadas <span class='label' style='background:#FF7224'>meridianos</span>."] },
-  { tipo:"scene", video:"videos/18.mp4", poster:"https://static01.nyt.com/images/2026/02/11/11visualUploader-40015-cover/11visualUploader-40015-cover-superJumbo.jpg", height:"short", captions:["Acupunturistas inserem pequenas agulhas em pontos específicos do corpo para aumentar o fluxo de chi."] },
-  { tipo:"scene", video:"videos/19.mp4", poster:"https://static01.nyt.com/images/2026/04/28/28visualUploader-74451-cover/28visualUploader-74451-cover-superJumbo.jpg", height:"short", captions:["Em um estudo de 2002, Helene Langevin e Jason Yandow mapearam os pontos de acupuntura nos braços para a fáscia entre e ao redor dos músculos."] },
-  { tipo:"scene", video:"videos/20.mp4", poster:"https://static01.nyt.com/images/2026/02/12/12visualUploader-67059-cover/12visualUploader-67059-cover-superJumbo.jpg", height:"short", captions:["Esses <span class='label' style='background:#FFC546'>pontos de acupuntura</span> foram desde então encontrados nas mesmas áreas de tecido conjuntivo onde o fluido flui pelo interstício."] },
-  { tipo:"scene", video:"videos/21.mp4", poster:"https://static01.nyt.com/images/2026/04/29/interstitium-tracer-61622-cover/interstitium-tracer-61622-cover-superJumbo.jpg", captions:[
+  { tipo:"scene", video:"videos/15.mp4", loop:false, side:"right",  captions:["A <span class='label' style='background:#FFC546'>acupuntura</span> é usada para tratar condições tão variadas quanto dor crônica, enxaqueca, alergias sazonais e náusea causada por quimioterapia — mas algumas de suas ações nunca foram completamente explicadas. A descoberta do interstício pode ajudar a entender, em termos biomédicos modernos, como ela funciona."] },
+  { tipo:"scene", video:"videos/16.mp4", loop:true,  side:"left",   height:"short", captions:["Os princípios da prática invocam dois elementos circulantes: chi e sangue."] },
+  { tipo:"scene", video:"videos/17.mp4", loop:false, side:"right",  captions:["A medicina tradicional chinesa descreve o chi como fluindo ao longo de uma das 12 trilhas principais, chamadas <span class='label' style='background:#FF7224'>meridianos</span>."] },
+  { tipo:"scene", video:"videos/18.mp4", loop:false, side:"left",   height:"short", captions:["Acupunturistas inserem pequenas agulhas em pontos específicos do corpo para aumentar o fluxo de chi."] },
+  { tipo:"scene", video:"videos/19.mp4", loop:false, side:"right",  height:"short", captions:["Em um estudo de 2002, Helene Langevin e Jason Yandow mapearam os pontos de acupuntura nos braços para a fáscia entre e ao redor dos músculos."] },
+  { tipo:"scene", video:"videos/20.mp4", loop:false, side:"left",   height:"short", captions:["Esses <span class='label' style='background:#FFC546'>pontos de acupuntura</span> foram desde então encontrados nas mesmas áreas de tecido conjuntivo onde o fluido flui pelo interstício."] },
+  { tipo:"scene", video:"videos/21.mp4", loop:false, side:"right",  captions:[
     "Um artigo de 2019 de pesquisadores na China, liderado pelo Dr. Hongyi Li, explica como injetaram <span class='label' style='background:#51ACFF'>traçadores químicos</span> em pontos de acupuntura nas mãos e pés de cadáveres, usando compressões torácicas para empurrar o fluido.",
     "A fotografia fluorescente permitiu ver os traçadores viajando em direção ao coração dentro dos espaços intersticiais dos braços e pernas — evidência de um sistema de circulação intersticial."
   ]},
-  { tipo:"scene", video:"videos/22.mp4", poster:"https://static01.nyt.com/images/2026/05/06/06visualUploader-17692-cover/06visualUploader-17692-cover-superJumbo.jpg", height:"short", loop:true, captions:["Se os pontos de acupuntura parecem residir no interstício, os <span class='label' style='background:#FF7224'>meridianos</span> poderiam correr por ele também?"] },
-  { tipo:"scene", video:"videos/23.mp4", poster:"https://static01.nyt.com/images/2026/05/06/06visualUploader-70628-cover/06visualUploader-70628-cover-superJumbo.jpg", captions:[
+  { tipo:"scene", video:"videos/22.mp4", loop:true,  side:"left",   height:"short", captions:["Se os pontos de acupuntura parecem residir no interstício, os <span class='label' style='background:#FF7224'>meridianos</span> poderiam correr por ele também?"] },
+  { tipo:"scene", video:"videos/23.mp4", loop:false, side:"right",  captions:[
     "Em 2021, um grupo de pesquisadores conduziu um experimento semelhante na China, em sujeitos vivos, injetando <span class='label' style='background:#F27BFF'>corante</span> em pontos de acupuntura nos antebraços de 15 voluntários.",
     "Em quase todos, o corante migrou lentamente para cima ao longo de uma rota correspondente ao <span class='label' style='background:#FF7224'>meridiano do pericárdio</span>, que passa pelo punho e pelo braço interno.",
     "(O pericárdio é o mesmo meridiano estimulado por pulseiras anti-náusea populares em cruzeiros.)"
   ]},
-  { tipo:"scene", video:"videos/24.mp4", poster:"https://static01.nyt.com/images/2026/05/08/08visualUploader-87104-cover/08visualUploader-87104-cover-superJumbo.jpg", captions:["“Esse caminho não vai nas veias, não vai superficialmente”, diz Andrew Ahn, autor sênior do estudo e professor assistente em Harvard. Ele segue, em vez disso, para o interstício entre os músculos: “Quando vi isso, disse: ‘Estamos no caminho certo. Isso realmente tem a ver com a acupuntura.’”"] },
-  { tipo:"scene", video:"videos/25.mp4", poster:"https://static01.nyt.com/images/2026/05/08/08visualUploader-14074-cover/08visualUploader-14074-cover-superJumbo.jpg", height:"short", captions:["“Eu realmente acho que o interstício pode ser a ligação entre a medicina oriental e a ocidental”, disse Wells. “Mas é preciso mostrar cientificamente que é esse o caso.”"] },
+  { tipo:"scene", video:"videos/24.mp4", loop:false, side:"left",   captions:["“Esse caminho não vai nas veias, não vai superficialmente”, diz Andrew Ahn, autor sênior do estudo e professor assistente em Harvard. Ele segue, em vez disso, para o interstício entre os músculos: “Quando vi isso, disse: ‘Estamos no caminho certo. Isso realmente tem a ver com a acupuntura.’”"] },
+  { tipo:"scene", video:"videos/25.mp4", loop:false, side:"right",  height:"short", captions:["“Eu realmente acho que o interstício pode ser a ligação entre a medicina oriental e a ocidental”, disse Wells. “Mas é preciso mostrar cientificamente que é esse o caso.”"] },
   { tipo:"stickytext", text:"Muito mais pesquisa é necessária para começar a entender as implicações completas da descoberta de um interstício interconectado — mas já há pistas promissoras." },
-  { tipo:"scene", video:"videos/26.mp4", poster:"https://static01.nyt.com/images/2026/05/04/04visualUploader-14736-cover/04visualUploader-14736-cover-superJumbo.jpg", captions:["Pesquisas em animais lideradas por Merrick sugerem que, quando uma pessoa ganha peso, células especializadas no interstício ao redor da gordura corporal podem ser convocadas a produzir células de gordura saudáveis — fator-chave para afastar o diabetes tipo 2."] },
-  { tipo:"scene", video:"videos/27.mp4", poster:"https://static01.nyt.com/images/2026/05/04/04visualUploader-28268-cover/04visualUploader-28268-cover-superJumbo.jpg", height:"short", captions:["Inclinar essas <span class='label' style='background:#F27BFF'>células especializadas</span> para a produção de mais gordura saudável pode oferecer um alvo para potenciais terapias contra o diabetes."] },
-  { tipo:"scene", video:"videos/28.mp4", poster:"https://static01.nyt.com/images/2026/03/16/16visualUploader-24553-cover/16visualUploader-24553-cover-superJumbo.jpg", height:"short", loop:true, captions:[
+  { tipo:"scene", video:"videos/26.mp4", loop:false, side:"left",   captions:["Pesquisas em animais lideradas por Merrick sugerem que, quando uma pessoa ganha peso, células especializadas no interstício ao redor da gordura corporal podem ser convocadas a produzir células de gordura saudáveis — fator-chave para afastar o diabetes tipo 2."] },
+  { tipo:"scene", video:"videos/27.mp4", loop:false, side:"right",  height:"short", captions:["Inclinar essas <span class='label' style='background:#F27BFF'>células especializadas</span> para a produção de mais gordura saudável pode oferecer um alvo para potenciais terapias contra o diabetes."] },
+  { tipo:"scene", video:"videos/28.mp4", loop:true,  side:"left",   height:"short", captions:[
     "Wells, gastroenterologista, diz que as ligações intersticiais podem ajudar a explicar por que alguns pacientes com doenças inflamatórias intestinais desenvolvem uma doença autoimune que afeta os ductos biliares.",
     "Teoriza-se que células imunes e bactérias migram do <span class='label' style='background:#2DBDFF'>intestino</span> para o <span class='label' style='background:#2DBDFF'>fígado</span> e chegam aos <span class='label' style='background:#2DBDFF'>ductos biliares</span> através do interstício."
   ]},
-  { tipo:"scene", video:"videos/29.mp4", poster:"https://static01.nyt.com/images/2026/05/07/07visualUploader-71756-cover/07visualUploader-71756-cover-superJumbo.jpg", captions:["Um interstício interconectado também parece desempenhar um papel crítico na <span class='label' style='background:#9AE100'>metástase do câncer</span>. Sabe-se que células cancerígenas se espalham pelo sistema linfático."] },
-  { tipo:"scene", video:"videos/30.mp4", poster:"https://static01.nyt.com/images/2026/05/07/07visualUploader-88084-cover/07visualUploader-88084-cover-superJumbo.jpg", height:"short", loop:true, captions:[
+  { tipo:"scene", video:"videos/29.mp4", loop:false, side:"right",  captions:["Um interstício interconectado também parece desempenhar um papel crítico na <span class='label' style='background:#9AE100'>metástase do câncer</span>. Sabe-se que células cancerígenas se espalham pelo sistema linfático."] },
+  { tipo:"scene", video:"videos/30.mp4", loop:true,  side:"left",   height:"short", captions:[
     "Mas evidências sugerem que as células tumorais podem alcançar o sistema linfático navegando primeiro pelo fluido do interstício — como peixes nadando rio abaixo.",
     "Diversos tipos de câncer já foram vistos se espalhando pelo interstício, quebrando o ácido hialurônico à medida que avançam."
   ]},
-  { tipo:"scene", video:"videos/31.mp4", poster:"https://static01.nyt.com/images/2026/05/06/06visualUploader-37296-cover/06visualUploader-37296-cover-superJumbo.jpg", captions:["Um medicamento chamado narmafotinib, que interrompe a forma como as células tumorais invadem e se movem pelo interstício, mostrou-se promissor em ensaios clínicos iniciais para o câncer de pâncreas, combinado à quimioterapia."] },
-  { tipo:"scene", video:"videos/32.mp4", poster:"https://static01.nyt.com/images/2026/05/05/05visualUploader-79538-cover/05visualUploader-79538-cover-superJumbo.jpg", captions:["Wells aponta que hidras — pequenos invertebrados de água doce — têm tecido conjuntivo preenchido por fluido chamado mesogleia que, como o interstício, contém colágeno e uma substância gelatinosa semelhante ao ácido hialurônico."] },
-  { tipo:"scene", video:"videos/33.mp4", poster:"https://static01.nyt.com/images/2026/05/08/08visualUploader-48780-cover/08visualUploader-48780-cover-superJumbo.jpg", height:"short", captions:["As plantas também parecem possuir sua própria versão de um interstício. É chamado de <span class='label' style='background:#FF371D'>apoplasto</span> — um tipo de espaço intersticial que transporta água e nutrientes fora das membranas celulares."] },
+  { tipo:"scene", video:"videos/31.mp4", loop:false, side:"right",  captions:["Um medicamento chamado narmafotinib, que interrompe a forma como as células tumorais invadem e se movem pelo interstício, mostrou-se promissor em ensaios clínicos iniciais para o câncer de pâncreas, combinado à quimioterapia."] },
+  { tipo:"scene", video:"videos/32.mp4", loop:false, side:"left",   captions:["Wells aponta que hidras — pequenos invertebrados de água doce — têm tecido conjuntivo preenchido por fluido chamado mesogleia que, como o interstício, contém colágeno e uma substância gelatinosa semelhante ao ácido hialurônico."] },
+  { tipo:"scene", video:"videos/33.mp4", loop:false, side:"right",  height:"short", captions:["As plantas também parecem possuir sua própria versão de um interstício. É chamado de <span class='label' style='background:#FF371D'>apoplasto</span> — um tipo de espaço intersticial que transporta água e nutrientes fora das membranas celulares."] },
   { tipo:"stickytext", text:"Esses e outros exemplos sugerem que o fluido movendo-se por espaços intersticiais pode ter representado o primeiro sistema circulatório a se desenvolver nas formas mais antigas de vida multicelular complexa, há centenas de milhões de anos." },
   { tipo:"stickytext", text:"Essa descoberta relativamente recente pode ter aberto novas fronteiras de pesquisa que se conectam a algumas das formas de vida mais antigas do nosso planeta." }
 ];
@@ -374,79 +326,153 @@ CENAS.forEach((cena, idx) => {
     return;
   }
 
+  // Slot de vídeo
   const slot = document.createElement('div');
   slot.className = 'video-slot';
   slot.dataset.sceneIndex = idx;
 
   const video = document.createElement('video');
   video.src = cena.video;
-  video.poster = cena.poster || '';
   video.muted = true;
   video.playsInline = true;
   video.preload = 'auto';
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('disableremoteplayback', '');
-  // loop só para as cenas marcadas; scrubbing controla as demais
-  if (cena.loop) video.loop = true;
+  // Não define loop no atributo — controlamos via JS
   slot.appendChild(video);
 
   const vig = document.createElement('div');
   vig.className = 'vignette';
   slot.appendChild(vig);
 
-  cena.captions.forEach(txt => {
-    const cap = document.createElement('div');
-    cap.className = 'caption';
-    cap.innerHTML = txt;
-    slot.appendChild(cap);
-  });
-
   videoStage.appendChild(slot);
 
-  const spacer = document.createElement('div');
-  spacer.className = 'scene' + (cena.height ? ' ' + cena.height : '');
-  scrolly.appendChild(spacer);
+  // Seção scrollável com caixa de texto
+  const section = document.createElement('section');
+  section.className = 'scene' + (cena.height ? ' ' + cena.height : '');
+  section.dataset.sceneIndex = idx;
 
-  const entry = { slot, video, spacer, cena, idx, duration: NaN };
-  videoScenes.push(entry);
+  const wrap = document.createElement('div');
+  wrap.className = 'textbox-wrap ' + (cena.side || 'left');
 
-  // Força o carregamento
-  video.load();
+  const box = document.createElement('div');
+  box.className = 'textbox';
+  cena.captions.forEach(txt => {
+    const p = document.createElement('p');
+    p.innerHTML = txt;
+    box.appendChild(p);
+  });
+  wrap.appendChild(box);
+  section.appendChild(wrap);
+  scrolly.appendChild(section);
 
-  // Descobre duration, tratando o caso Infinity (MP4 fragmentado)
-  const onMeta = () => {
-    if (isFinite(video.duration) && video.duration > 0) {
-      entry.duration = video.duration;
-      console.log(`✓ Vídeo ${idx} (${cena.video}) pronto. duration=${video.duration.toFixed(2)}s`);
-    } else {
-      // Truque para forçar descoberta de duration em MP4 fragmentado
-      console.warn(`⏳ Vídeo ${idx}: duration=${video.duration}. Forçando descoberta...`);
-      try {
-        video.currentTime = 1e6; // seek absurdo → navegador descobre o fim
-        video.addEventListener('seeked', function once() {
-          video.removeEventListener('seeked', once);
-          video.currentTime = 0;
-          entry.duration = video.duration;
-          console.log(`✓ Vídeo ${idx}: duration descoberta = ${video.duration.toFixed(2)}s`);
-        });
-      } catch (e) {
-        console.error(`✗ Vídeo ${idx}: não conseguiu descobrir duration`, e);
-      }
-    }
-  };
-  video.addEventListener('loadedmetadata', onMeta);
-  if (video.readyState >= 1) onMeta(); // caso já tenha carregado
+  videoScenes.push({ slot, video, section, cena });
+});
 
-  video.addEventListener('error', () => {
-    console.error(`✗ Vídeo ${idx} erro:`, video.error?.code, video.error?.message, cena.video);
+/* ========= CRÉDITOS ========= */
+const credits = document.createElement('footer');
+credits.className = 'credits';
+credits.innerHTML = `
+  <div class="credits-inner">
+    <p><strong>Avraham Z. Cooper</strong> é médico pneumologista e professor associado de medicina na Ohio State University.</p>
+    <p style="margin-top:1rem"><strong>Jérôme Berthier</strong> é artista visual e ilustrador em Vancouver, Canadá.</p>
+    <p style="margin-top:1.5rem;font-size:0.8rem;color:#888">
+      Recriação não-oficial em português, sem anúncios e sem login.
+      Conteúdo e vídeos originais © The New York Times Company.
+      Tradução livre para fins de leitura.
+    </p>
+  </div>
+`;
+scrolly.parentElement.insertBefore(credits, scrolly.nextSibling);
+
+/* ========= COMPORTAMENTO DOS VÍDEOS ========= */
+/* Regras:
+   - Quando a cena entra em ~55% da viewport, marca como "ativa"
+   - Vídeos com loop:true → play() contínuo enquanto ativos
+   - Vídeos com loop:false → play() só quando a cena vira "ativa",
+     e a posição reinicia caso a cena não estivesse ativa antes
+   - Ao sair, vídeos pausam. Os de loop:false voltam ao início
+     para a próxima vez que entrarem. */
+
+videoScenes.forEach(({ video, cena }) => {
+  if (cena.loop) video.loop = true;
+  video.addEventListener('loadedmetadata', () => {
+    // Mostra o primeiro frame para evitar "flash preto"
+    try { video.currentTime = 0.01; } catch(e) {}
   });
 });
 
-/* ========= SCROLL ========= */
+const sceneState = new WeakMap(); // section -> { wasActive: bool }
+
+function updateVideos() {
+  const vh = window.innerHeight;
+
+  videoScenes.forEach(({ video, section, slot, cena }) => {
+    const rect = section.getBoundingClientRect();
+    const center = rect.top + rect.height / 2;
+    // "ativa" = centro da cena passou além do centro da viewport
+    const isActive = center < vh * 0.55 && rect.bottom > vh * 0.15;
+    const state = sceneState.get(section) || { wasActive: false };
+
+    if (isActive && !state.wasActive) {
+      // Entrou: toca do começo (ou continua para os loop)
+      if (cena.loop) {
+        video.play().catch(() => {});
+      } else {
+        // Volta ao início para tocar a animação inteira
+        try { video.currentTime = 0; } catch(e) {}
+        video.play().catch(() => {});
+      }
+      state.wasActive = true;
+    } else if (!isActive && state.wasActive) {
+      // Saiu: pausa
+      video.pause();
+      // Para os que não são loop, volta ao início
+      if (!cena.loop) {
+        try { video.currentTime = 0; } catch(e) {}
+      }
+      state.wasActive = false;
+    }
+
+    sceneState.set(section, state);
+
+    // Opacidade do slot
+    // Fade-in nos primeiros 40% da cena, fade-out nos últimos 20%
+    const sceneTop = rect.top;
+    const sceneH = rect.height;
+    const scrollable = sceneH - vh;
+    let progress = -sceneTop / scrollable;
+    progress = Math.max(0, Math.min(1, progress));
+
+    let op = 1;
+    if (progress < 0.25) op = progress / 0.25;
+    else if (progress > 0.85) op = (1 - progress) / 0.15;
+    op = Math.max(0, Math.min(1, op));
+
+    slot.style.opacity = op;
+
+    // Textbox (aparece quando a cena está ativa, esmaece junto)
+    const box = section.querySelector('.textbox');
+    if (box) {
+      if (op > 0.4) box.classList.add('in');
+      else box.classList.remove('in');
+      box.style.opacity = op;
+      // Pequeno parallax vertical
+      box.style.transform = `translateY(${(1 - op) * 20}px)`;
+    }
+  });
+
+  // Interlúdios
+  document.querySelectorAll('.interlude p').forEach(p => {
+    const r = p.getBoundingClientRect();
+    if (r.top < vh * 0.85 && r.bottom > 0) p.classList.add('in');
+  });
+}
+
+/* ========= PROGRESSO + SCROLL ========= */
 const progressBar = document.getElementById('progress');
 const hint = document.getElementById('hint');
 const loading = document.getElementById('loading');
-const targetTimes = new WeakMap();
 
 let loadingHidden = false;
 function hideLoading() {
@@ -456,6 +482,9 @@ function hideLoading() {
   setTimeout(() => loading.remove(), 700);
 }
 setTimeout(hideLoading, 3000);
+videoScenes.forEach(({ video }) => {
+  video.addEventListener('loadeddata', hideLoading, { once: true });
+});
 
 let hintHidden = false;
 window.addEventListener('scroll', () => {
@@ -465,95 +494,14 @@ window.addEventListener('scroll', () => {
   }
 }, { passive: true });
 
-function updateScenes() {
-  const vh = window.innerHeight;
-  const scrollY = window.scrollY;
-
-  const docH = document.documentElement.scrollHeight - vh;
-  progressBar.style.width = (docH > 0 ? (scrollY / docH) * 100 : 0) + '%';
-
-  videoScenes.forEach((s, i) => {
-    const rect = s.spacer.getBoundingClientRect();
-    const spacerTop = scrollY + rect.top;
-    const spacerH = s.spacer.offsetHeight;
-    const spacerEnd = spacerTop + spacerH;
-    const stickyEnd = spacerEnd - vh;
-
-    // ===== CROSSFADE =====
-    let opacity = 0;
-    if (scrollY < spacerTop - vh) opacity = 0;
-    else if (scrollY <= spacerTop) opacity = (scrollY - (spacerTop - vh)) / vh;
-    else if (scrollY <= stickyEnd) opacity = 1;
-    else if (scrollY <= spacerEnd) opacity = 1 - (scrollY - stickyEnd) / vh;
-    else opacity = 0;
-    opacity = Math.max(0, Math.min(1, opacity));
-    s.slot.style.opacity = opacity;
-
-    // ===== PROGRESSO DA CENA (0..1) =====
-    let progress = 0;
-    if (scrollY <= spacerTop) progress = 0;
-    else if (scrollY >= stickyEnd) progress = 1;
-    else progress = (scrollY - spacerTop) / (stickyEnd - spacerTop);
-
-    // ===== VÍDEO =====
-    const video = s.video;
-    const durationOk = isFinite(s.duration) && s.duration > 0;
-
-    if (durationOk && !s.cena.loop && video.readyState >= 2) {
-      // ---- SCRUBBING ----
-      const target = progress * (s.duration - 0.05);
-      const current = targetTimes.get(video) ?? video.currentTime;
-      const smooth = current + (target - current) * 0.35;
-      targetTimes.set(video, smooth);
-      if (Math.abs(video.currentTime - smooth) > 0.04) {
-        try { video.currentTime = smooth; } catch (e) { /* ignore */ }
-      }
-    } else {
-      // ---- FALLBACK: tocar normalmente quando visível ----
-      const visible = opacity > 0.15;
-      if (visible) {
-        if (video.paused && video.readyState >= 2) {
-          video.loop = true; // garante que continua enquanto visível
-          video.play().catch(() => {});
-        }
-      } else {
-        if (!video.paused) video.pause();
-      }
-    }
-
-    // ===== LEGENDAS =====
-    const caps = s.slot.querySelectorAll('.caption');
-    const total = caps.length;
-    caps.forEach((cap, ci) => {
-      const winStart = ci / total;
-      const winEnd = (ci + 1) / total;
-      const local = (progress - winStart) / (winEnd - winStart);
-      let op = 0;
-      if (local >= 0 && local <= 1) {
-        if (local < 0.18) op = local / 0.18;
-        else if (local > 0.82) op = (1 - local) / 0.18;
-        else op = 1;
-      }
-      op = Math.max(0, Math.min(1, op));
-      cap.style.opacity = op * opacity;
-      cap.style.transform = `translateX(-50%) translateY(${(1 - op) * 24}px)`;
-    });
-  });
-
-  // Interlúdios
-  document.querySelectorAll('.interlude p').forEach(p => {
-    const r = p.getBoundingClientRect();
-    if (r.top < vh * 0.85 && r.bottom > 0) {
-      p.classList.add('in');
-    }
-  });
-}
-
 let ticking = false;
 function onScroll() {
   if (!ticking) {
     requestAnimationFrame(() => {
-      updateScenes();
+      const vh = window.innerHeight;
+      const docH = document.documentElement.scrollHeight - vh;
+      progressBar.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+      updateVideos();
       ticking = false;
     });
     ticking = true;
@@ -562,20 +510,9 @@ function onScroll() {
 window.addEventListener('scroll', onScroll, { passive: true });
 window.addEventListener('resize', onScroll);
 window.addEventListener('load', () => {
-  updateScenes();
+  updateVideos();
   setTimeout(hideLoading, 800);
 });
-
-/* ========= DEBUG NO CONSOLE ========= */
-// A cada 2s, imprime o status dos 3 primeiros vídeos
-setInterval(() => {
-  if (window.scrollY < 50) {
-    const status = videoScenes.slice(0, 3).map((s, i) =>
-      `[${i}] rs=${s.video.readyState} dur=${isFinite(s.duration) ? s.duration.toFixed(2) : s.duration} op=${s.slot.style.opacity}`
-    ).join('\n');
-    console.log('=== STATUS ===\n' + status);
-  }
-}, 2000);
 </script>
 
 </body>
