@@ -295,7 +295,7 @@
 <div class="scroll-hint" id="hint">Role para começar</div>
 
 <script>
-/* ========= DADOS (mesmos do seu arquivo, mantive igual) ========= */
+/* ========= DADOS ========= */
 const CENAS = [
   { tipo:"scene", video:"videos/01.mp4", poster:"https://static01.nyt.com/images/2026/02/09/09visualUploader-89690-cover/09visualUploader-89690-cover-superJumbo.jpg", height:"short", captions:["Algumas descobertas mudam a forma como vemos o corpo humano."] },
   { tipo:"scene", video:"videos/02.mp4", poster:"https://static01.nyt.com/images/2026/05/07/07visualUploader-26197-cover/07visualUploader-26197-cover-superJumbo.jpg", captions:["Em 2021, pesquisadores descreveram o que viram ao examinar amostras de biópsia de pele com tatuagens: as partículas de tinta viajaram mais fundo do que o esperado, através de espaços intersticiais, até o tecido sob a pele — a fáscia."] },
@@ -363,7 +363,7 @@ const CENAS = [
 /* ========= CONSTRUÇÃO DO DOM ========= */
 const videoStage = document.getElementById('videoStage');
 const scrolly = document.getElementById('scrolly');
-const videoScenes = []; // {slot, video, captions, spacer, cenaIdx}
+const videoScenes = [];
 
 CENAS.forEach((cena, idx) => {
   if (cena.tipo === 'stickytext') {
@@ -374,7 +374,6 @@ CENAS.forEach((cena, idx) => {
     return;
   }
 
-  // Slot fixo com o vídeo
   const slot = document.createElement('div');
   slot.className = 'video-slot';
   slot.dataset.sceneIndex = idx;
@@ -385,9 +384,10 @@ CENAS.forEach((cena, idx) => {
   video.muted = true;
   video.playsInline = true;
   video.preload = 'auto';
-  if (cena.loop) video.loop = true;
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('disableremoteplayback', '');
+  // loop só para as cenas marcadas; scrubbing controla as demais
+  if (cena.loop) video.loop = true;
   slot.appendChild(video);
 
   const vig = document.createElement('div');
@@ -403,12 +403,43 @@ CENAS.forEach((cena, idx) => {
 
   videoStage.appendChild(slot);
 
-  // Espaçador scrollável
   const spacer = document.createElement('div');
   spacer.className = 'scene' + (cena.height ? ' ' + cena.height : '');
   scrolly.appendChild(spacer);
 
-  videoScenes.push({ slot, video, spacer, cenaIdx: idx });
+  const entry = { slot, video, spacer, cena, idx, duration: NaN };
+  videoScenes.push(entry);
+
+  // Força o carregamento
+  video.load();
+
+  // Descobre duration, tratando o caso Infinity (MP4 fragmentado)
+  const onMeta = () => {
+    if (isFinite(video.duration) && video.duration > 0) {
+      entry.duration = video.duration;
+      console.log(`✓ Vídeo ${idx} (${cena.video}) pronto. duration=${video.duration.toFixed(2)}s`);
+    } else {
+      // Truque para forçar descoberta de duration em MP4 fragmentado
+      console.warn(`⏳ Vídeo ${idx}: duration=${video.duration}. Forçando descoberta...`);
+      try {
+        video.currentTime = 1e6; // seek absurdo → navegador descobre o fim
+        video.addEventListener('seeked', function once() {
+          video.removeEventListener('seeked', once);
+          video.currentTime = 0;
+          entry.duration = video.duration;
+          console.log(`✓ Vídeo ${idx}: duration descoberta = ${video.duration.toFixed(2)}s`);
+        });
+      } catch (e) {
+        console.error(`✗ Vídeo ${idx}: não conseguiu descobrir duration`, e);
+      }
+    }
+  };
+  video.addEventListener('loadedmetadata', onMeta);
+  if (video.readyState >= 1) onMeta(); // caso já tenha carregado
+
+  video.addEventListener('error', () => {
+    console.error(`✗ Vídeo ${idx} erro:`, video.error?.code, video.error?.message, cena.video);
+  });
 });
 
 /* ========= SCROLL ========= */
@@ -417,7 +448,6 @@ const hint = document.getElementById('hint');
 const loading = document.getElementById('loading');
 const targetTimes = new WeakMap();
 
-let videoReadyCount = 0;
 let loadingHidden = false;
 function hideLoading() {
   if (loadingHidden) return;
@@ -426,17 +456,6 @@ function hideLoading() {
   setTimeout(() => loading.remove(), 700);
 }
 setTimeout(hideLoading, 3000);
-
-videoScenes.forEach(s => {
-  s.video.addEventListener('loadedmetadata', () => {
-    videoReadyCount++;
-    if (videoReadyCount >= Math.min(3, videoScenes.length)) hideLoading();
-    updateScenes();
-  });
-  s.video.addEventListener('error', () => {
-    console.warn('Erro ao carregar vídeo:', s.video.src);
-  });
-});
 
 let hintHidden = false;
 window.addEventListener('scroll', () => {
@@ -450,85 +469,75 @@ function updateScenes() {
   const vh = window.innerHeight;
   const scrollY = window.scrollY;
 
-  // Barra de progresso
   const docH = document.documentElement.scrollHeight - vh;
   progressBar.style.width = (docH > 0 ? (scrollY / docH) * 100 : 0) + '%';
 
-  videoScenes.forEach(s => {
+  videoScenes.forEach((s, i) => {
     const rect = s.spacer.getBoundingClientRect();
     const spacerTop = scrollY + rect.top;
     const spacerH = s.spacer.offsetHeight;
     const spacerEnd = spacerTop + spacerH;
     const stickyEnd = spacerEnd - vh;
 
-    // ===== CROSSFADE ENTRE CENAS =====
-    // A opacidade do slot depende de onde o scroll está em relação ao espaçador.
-    // - Antes do espaçador entrar: 0
-    // - Durante os últimos 100vh antes do topo do espaçador: fade in (0 → 1)
-    // - Durante o "sticky zone": 1
-    // - Durante os últimos 100vh do espaçador: fade out (1 → 0)
-    // - Depois: 0
+    // ===== CROSSFADE =====
     let opacity = 0;
     if (scrollY < spacerTop - vh) opacity = 0;
     else if (scrollY <= spacerTop) opacity = (scrollY - (spacerTop - vh)) / vh;
     else if (scrollY <= stickyEnd) opacity = 1;
     else if (scrollY <= spacerEnd) opacity = 1 - (scrollY - stickyEnd) / vh;
     else opacity = 0;
-
-    // Clamp
     opacity = Math.max(0, Math.min(1, opacity));
     s.slot.style.opacity = opacity;
 
-    // ===== SCRUBBING DO VÍDEO =====
-    const video = s.video;
-    if (video.readyState >= 2 && video.duration && !isNaN(video.duration)) {
-      if (video.loop) {
-        // Vídeos em loop: toca quando visível, pausa quando não
-        const visible = opacity > 0.15;
-        if (visible && video.paused) video.play().catch(() => {});
-        if (!visible && !video.paused) video.pause();
-      } else {
-        // Scrubbing: 0 = topo do espaçador, 1 = fim do sticky
-        let progress = 0;
-        if (scrollY <= spacerTop) progress = 0;
-        else if (scrollY >= stickyEnd) progress = 1;
-        else progress = (scrollY - spacerTop) / (stickyEnd - spacerTop);
+    // ===== PROGRESSO DA CENA (0..1) =====
+    let progress = 0;
+    if (scrollY <= spacerTop) progress = 0;
+    else if (scrollY >= stickyEnd) progress = 1;
+    else progress = (scrollY - spacerTop) / (stickyEnd - spacerTop);
 
-        const target = progress * (video.duration - 0.05);
-        const current = targetTimes.get(video) ?? video.currentTime;
-        const smooth = current + (target - current) * 0.35;
-        targetTimes.set(video, smooth);
-        if (Math.abs(video.currentTime - smooth) > 0.04) {
-          try { video.currentTime = smooth; } catch (e) {}
+    // ===== VÍDEO =====
+    const video = s.video;
+    const durationOk = isFinite(s.duration) && s.duration > 0;
+
+    if (durationOk && !s.cena.loop && video.readyState >= 2) {
+      // ---- SCRUBBING ----
+      const target = progress * (s.duration - 0.05);
+      const current = targetTimes.get(video) ?? video.currentTime;
+      const smooth = current + (target - current) * 0.35;
+      targetTimes.set(video, smooth);
+      if (Math.abs(video.currentTime - smooth) > 0.04) {
+        try { video.currentTime = smooth; } catch (e) { /* ignore */ }
+      }
+    } else {
+      // ---- FALLBACK: tocar normalmente quando visível ----
+      const visible = opacity > 0.15;
+      if (visible) {
+        if (video.paused && video.readyState >= 2) {
+          video.loop = true; // garante que continua enquanto visível
+          video.play().catch(() => {});
         }
+      } else {
+        if (!video.paused) video.pause();
       }
     }
 
-    // ===== CAPTIONS =====
+    // ===== LEGENDAS =====
     const caps = s.slot.querySelectorAll('.caption');
     const total = caps.length;
-    if (total > 0) {
-      let progress = 0;
-      if (scrollY <= spacerTop) progress = 0;
-      else if (scrollY >= stickyEnd) progress = 1;
-      else progress = (scrollY - spacerTop) / (stickyEnd - spacerTop);
-
-      caps.forEach((cap, ci) => {
-        const winStart = ci / total;
-        const winEnd = (ci + 1) / total;
-        const local = (progress - winStart) / (winEnd - winStart);
-        let op = 0;
-        if (local >= 0 && local <= 1) {
-          if (local < 0.18) op = local / 0.18;
-          else if (local > 0.82) op = (1 - local) / 0.18;
-          else op = 1;
-        }
-        op = Math.max(0, Math.min(1, op));
-        // Multiplica pela opacidade do slot para as legendas apagarem junto
-        cap.style.opacity = op * opacity;
-        cap.style.transform = `translateX(-50%) translateY(${(1 - op) * 24}px)`;
-      });
-    }
+    caps.forEach((cap, ci) => {
+      const winStart = ci / total;
+      const winEnd = (ci + 1) / total;
+      const local = (progress - winStart) / (winEnd - winStart);
+      let op = 0;
+      if (local >= 0 && local <= 1) {
+        if (local < 0.18) op = local / 0.18;
+        else if (local > 0.82) op = (1 - local) / 0.18;
+        else op = 1;
+      }
+      op = Math.max(0, Math.min(1, op));
+      cap.style.opacity = op * opacity;
+      cap.style.transform = `translateX(-50%) translateY(${(1 - op) * 24}px)`;
+    });
   });
 
   // Interlúdios
@@ -556,6 +565,17 @@ window.addEventListener('load', () => {
   updateScenes();
   setTimeout(hideLoading, 800);
 });
+
+/* ========= DEBUG NO CONSOLE ========= */
+// A cada 2s, imprime o status dos 3 primeiros vídeos
+setInterval(() => {
+  if (window.scrollY < 50) {
+    const status = videoScenes.slice(0, 3).map((s, i) =>
+      `[${i}] rs=${s.video.readyState} dur=${isFinite(s.duration) ? s.duration.toFixed(2) : s.duration} op=${s.slot.style.opacity}`
+    ).join('\n');
+    console.log('=== STATUS ===\n' + status);
+  }
+}, 2000);
 </script>
 
 </body>
